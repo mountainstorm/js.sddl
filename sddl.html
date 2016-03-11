@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--
+ * Copyright (c) 2016 Mountainstorm
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ -->
+ <html lang="en">
+    <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+    </head>
+
+    <style>
+        .hdr-bg {
+            background: #785643;
+        }
+
+        .header {
+            color: white;    
+        }
+
+        .body > .row {
+            margin-top: 20px;
+        }
+
+        textarea {
+            max-width: 100%;
+            min-width: 100%;
+            width: 100%;
+        }
+
+        table > tbody > tr > *:first-child {
+            vertical-align: top;
+            padding-right: 5px;
+        }
+
+        table {
+            border: 1px solid lightgray;
+            border-width: 1px 0px 0px 0px;
+            margin: 5px 0px 5px 0px;
+        }
+    </style>
+    <body>
+        <div class="container-fluid hdr-bg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-offset-1 col-md-10">
+                        <h1 class="header">SDDL description</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container body">
+            <div class="row">
+                <div class="col-md-offset-1 col-md-10">
+                    <p>
+                    A simple SDDL Parser which converts SDDL/Security descriptors/ACEs to a javascript object tree.
+                    </p>
+                    <p>
+                    It's the SDDL equivolent of the awesome <a href="https://regex101.com">regex101</a>
+                    </p>
+                    <p>
+                    It allows you to decode SDDL strings on a whim, no more looking up the <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa379567(v=vs.85).aspx">documentation</a> and figuring out whats what.
+                    </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-offset-1 col-md-10">
+                    <h4>SDDL/SD/ACE string</h4>
+                    <textarea class="form-control" id="sddl" placeholder="SDDL/SD/ACE"></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-offset-1 col-md-10">          
+                    <h4>Details</h4>
+                    <div id="details"></div>
+                </div>
+            </div>
+        </div>     
+
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/js.sddl.js"></script>
+        <script type="text/javascript">
+            function displayNode(n) {
+                var details = n.details
+                if (n.details instanceof Array) {
+                    details = ''
+                    for (var i = 0; i < n.details.length; i++) {
+                        details += displayNode(n.details[i])
+                    }
+                } else if (n.details instanceof Object) {
+                    details = displayNode(n.details)
+                }
+                var retval = ''
+                if ('title' in n) {
+                    retval = '<table><tbody>' +
+                        '<tr><th>' + n.title + '</th><td>' + n.value + '</td></tr>' +
+                        '<tr><th></th><td>' + details + '</td></tr>' +
+                        '</tbody></table>'
+                } else {
+                    retval = '<table><tbody>' +
+                        '<tr><th>' + n.value + '</th><td>' + details + '</td></tr>' +
+                        '</tbody></table>'
+                }
+                return retval
+            }
+
+            function processSDDL(e) {
+                var sddl = $(e.currentTarget).val()
+                var $details = $('#details')
+                $details.empty()
+
+                var tree = sddlParseAny(sddl)
+                $details.append(displayNode(tree))
+            }
+
+            $('#sddl').blur(processSDDL)
+            $('#sddl').focusout(processSDDL)
+            $('#sddl').keyup(processSDDL)
+            $('#sddl').change(processSDDL)
+
+            //$('#sddl').val('O:AOG:DAD:ARP(A;;RPWPCCDCLCSWRCWDWOGA;;;S-1-0-0)')
+            $('#sddl').val('O:AOG:DAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCLCSWLORC;;;BO)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)')
+            $('#sddl').trigger('change')
+        </script>
+    </body>
+</html>
