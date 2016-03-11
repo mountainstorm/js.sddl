@@ -296,7 +296,10 @@ function sddlParseACE(ace) {
         retval['details'].push({
             'value': parts[0],
             'title': 'Type',
-            'details': parts[0] in SddlAceTypes ? SddlAceTypes[parts[0]]: null
+            'details': {
+                'value': parts[0],
+                'details': parts[0] in SddlAceTypes ? SddlAceTypes[parts[0]]: null
+            }
         })
     }
     // ace_flags
@@ -432,14 +435,20 @@ function sddlParse(sddl) {
         retval['details'].push({
             'value': 'O',
             'title': 'Owner',
-            'details': components['O'] in SddlSids ? SddlSids[components['O']]: null
+            'details': {
+                'value': components['O'],
+                'details': components['O'] in SddlSids ? SddlSids[components['O']]: null
+            }
         })
     }
     if ('G' in components) {
         retval['details'].push({
             'value': 'G',
             'title': 'Group',
-            'details': components['G'] in SddlSids ? SddlSids[components['G']]: null
+            'details': {
+                'value': components['G'],
+                'details': components['G'] in SddlSids ? SddlSids[components['G']]: null
+            }
         })
     }
     if ('D' in components) {
