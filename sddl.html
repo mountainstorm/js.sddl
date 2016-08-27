@@ -386,14 +386,16 @@
                     details = displayNode(n.details, augment)
                 } else {
                     // leaf node - so find and augment it
-                    var i = augment.remaining.indexOf(n.value)
-                    var filler = augment.remaining.substring(0, i)
-                    var component = augment.remaining.substring(i, i+n.value.length)
-                    augment.remaining = augment.remaining.substring(i+n.value.length)
-                    // choose color
-                    color = 'color' + gNextColor
-                    gNextColor++               
-                    augment.highlight += '<span>' + filler + '</span><span class="' + color + '">' + component + '</span>'
+                    if (n.value.indexOf('0x') != 0) {
+                        var i = augment.remaining.indexOf(n.value)
+                        var filler = augment.remaining.substring(0, i)
+                        var component = augment.remaining.substring(i, i+n.value.length)
+                        augment.remaining = augment.remaining.substring(i+n.value.length)
+                        // choose color
+                        color = 'color' + gNextColor
+                        gNextColor++               
+                        augment.highlight += '<span>' + filler + '</span><span class="' + color + '">' + component + '</span>'
+                    }
                 }
                 var retval = ''
                 if ('title' in n) {
@@ -430,8 +432,25 @@
             $('#sddl').keyup(processSDDL)
             $('#sddl').change(processSDDL)
 
-            //$('#sddl').val('O:AOG:DAD:ARP(A;;RPWPCCDCLCSWRCWDWOGA;;;S-1-0-0)')
-            $('#sddl').val('O:AOG:DAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCLCSWLORC;;;BO)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)')
+            function getParameterByName(name, url) {
+                if (!url) url = window.location.href
+                name = name.replace(/[\[\]]/g, '\\$&')
+                var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                    results = regex.exec(url)
+                if (!results) return null
+                if (!results[2]) return ''
+                return decodeURIComponent(results[2].replace(/\+/g, ' '))
+            }
+
+            var q = getParameterByName('q')
+            if (q && q.length) {
+                $('#sddl').val(q)
+            } else {
+                // O:SYG:SYD:(A;;0xf03bf;;;SY)(A;;CCLO;;;LS)(A;;CCLO;;;NS)(A;;0xf03bf;;;BA)(A;;CC;;‌​;IU)
+                //$('#sddl').val('O:AOG:DAD:ARP(A;;RPWPCCDCLCSWRCWDWOGA;;;S-1-0-0)')
+                $('#sddl').val('O:AOG:DAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCLCSWLORC;;;BO)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)')
+
+            }
             $('#sddl').trigger('change')
         </script>
     </body>
