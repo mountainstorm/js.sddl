@@ -86,6 +86,45 @@ SddlAceRights = {
     'NX': 'SYSTEM_MANDATORY_LABEL_NO_EXECUTE'
 }
 
+
+SddlAceIntRights = [
+    // Generic access rights
+    [0x10000000, 'GENERIC_ALL'],
+    [0x80000000, 'GENERIC_READ'],
+    [0x40000000, 'GENERIC_WRITE'],
+    [0x20000000, 'GENERIC_EXECUTE'],
+    // File access rights
+    [0x1f01ff, 'FILE_ALL_ACCESS'],
+    [0x120089, 'FILE_GENERIC_READ'],
+    [0x120116, 'FILE_GENERIC_WRITE'],
+    [0x1200a0, 'FILE_GENERIC_EXECUTE'],
+    // Standard access rights
+    [0x20000, 'READ_CONTROL'],
+    [0x00010000, 'DELETE'],
+    [0x40000, 'WRITE_DAC'],
+    [0x80000, 'WRITE_OWNER'],
+    // Registry key access rights
+    [0xf003f, 'KEY_ALL_ACCESS'],
+    [0x20019, 'KEY_READ'],
+    [0x20006, 'KEY_WRITE'],
+    [0x20019, 'KEY_EXECUTE'],
+    // Directory service object access rights
+    [0x10, 'ADS_RIGHT_DS_READ_PROP'],
+    [0x20, 'ADS_RIGHT_DS_WRITE_PROP'],
+    [0x1, 'ADS_RIGHT_DS_CREATE_CHILD'],
+    [0x2, 'ADS_RIGHT_DS_DELETE_CHILD'],
+    [0x4, 'ADS_RIGHT_ACTRL_DS_LIST'],
+    [0x8, 'ADS_RIGHT_DS_SELF'],
+    [0x80, 'ADS_RIGHT_DS_LIST_OBJECT'],
+    [0x40, 'ADS_RIGHT_DS_DELETE_TREE'],
+    [0x100, 'ADS_RIGHT_DS_CONTROL_ACCESS'],
+    // Mandatory label rights
+    [0x2, 'SYSTEM_MANDATORY_LABEL_NO_READ_UP'],
+    [0x1, 'SYSTEM_MANDATORY_LABEL_NO_WRITE_UP'],
+    [0x4, 'SYSTEM_MANDATORY_LABEL_NO_EXECUTE'],
+]
+
+
 SddlDaclFlags = {
     'P': 'SE_DACL_PROTECTED',
     'AR': 'SE_DACL_AUTO_INHERIT_REQ ',
@@ -230,7 +269,8 @@ WellKnownSids = {
     'S-1-5-32-577': 'BUILTIN\RDS Management Servers',
     'S-1-5-32-578': 'BUILTIN\Hyper-V Administrators',
     'S-1-5-32-579': 'BUILTIN\Access Control Assistance Operators',
-    'S-1-5-32-580': 'BUILTIN\Remote Management Users'
+    'S-1-5-32-580': 'BUILTIN\Remote Management Users',
+    'S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464': 'Trusted Installer'
 }
 
 SddlAceResourceAttributes = {
@@ -277,6 +317,22 @@ function sddlMatchFlags(flags, flagDict, title) {
     return retval
 }
 
+// O:SYG:SYD:(A;;0xf03bf;;;SY)(A;;CCLO;;;LS)(A;;CCLO;;;NS)(A;;0‌​xf03bf;;;BA)(A;;CC;;‌​;IU)
+function sddlIntRights(rights, value) {
+    // extract the int rights and add them into rights.details
+    for (var i = 0; i < SddlAceIntRights.length; i++) {
+        var right = SddlAceIntRights[i][0]
+        if ((value & right) == right) {
+            // matched
+            rights['details'].push({
+                'value': '0x' + right.toString(16),
+                'details': SddlAceIntRights[i][1]
+            })
+            value -= right
+        }
+    }
+}
+
 
 function sddlParseACE(ace) {
     retval = {
@@ -312,6 +368,10 @@ function sddlParseACE(ace) {
     // rights
     if (parts[2].length > 0) {
         var rights = sddlMatchFlags(parts[2], SddlAceRights, 'Rights')
+        if (parts[2].indexOf('0x') != -1) {
+            // the previous call will have failed as we have a hex number
+            sddlIntRights(rights, parseInt(parts[2], 16))
+        }
         if (rights['details'].length) {
             retval['details'].push(rights)
         }
